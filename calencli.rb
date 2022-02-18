@@ -109,9 +109,14 @@ $events = [
 def menu(arrTodo)
   puts "-----------------------------Welcome to CalenCLI------------------------------"
   todoList(arrTodo)
+
+end 
+
+
+def nameAction
   puts "------------------------------------------------------------------------------"
   puts "list | create | show | update | delete | next | prev | exit"
-end 
+end
 
 
 def todoList(todo_array)
@@ -123,7 +128,35 @@ end
 
 def initialProgram
   menu($events)
+  nameAction()
+  
 end
 
 
 initialProgram()
+action = nil
+
+while action != "exit"
+  print "action: "
+  action = gets.chomp
+case action
+when "list"
+  puts action
+when "create"
+  puts action
+when "show"
+  puts action
+when "update"
+  puts action
+when "delete"
+  puts action
+when "next"
+  puts action
+when "prev"
+  puts action
+when "exit"
+  puts action
+else
+  puts "action invalid"
+end
+end
