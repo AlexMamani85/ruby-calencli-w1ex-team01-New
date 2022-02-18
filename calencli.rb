@@ -98,70 +98,70 @@ $events = [
     "end_date" => "",
     "notes" => "",
     "guests" => [],
-    "calendar" => "web-dev" },
+    "calendar" => "web-dev" }
 ]
 
 # Methods
 
 # Main Program
-require 'date'
+require "date"
 
-def menu(arrTodo)
+def menu(arr_todo)
   puts "-----------------------------Welcome to CalenCLI------------------------------"
   puts ""
-  todoList(arrTodo,$date_base)
-end 
+  todo_list(arr_todo, $date_base)
+end
 
-
-def nameAction
+def name_action
   puts "------------------------------------------------------------------------------"
   puts "list | create | show | update | delete | next | prev | exit"
 end
 
-
-def todoList(todo_array, date_base)
-  #hash para llenar eventos vacios
-  event_nil = { "id" => "",
-  "start_date" => "",
-  "title" => "No events",
-  "end_date" => "",
-  "notes" => "",
-  "guests" => [],
-  "calendar" => "" }
+def todo_list(todo_array, date_base)
+  # hash para llenar eventos vacios
+  event_nil = {
+    "id" => "",
+    "start_date" => "",
+    "title" => "No events",
+    "end_date" => "",
+    "notes" => "",
+    "guests" => [],
+    "calendar" => ""
+  }
   
-  #for para iterar solo 7 dias
+  # for para iterar solo 7 dias
   for i in 1..7
     a_event = []
     count = 0
     has_event_all_day = 0
 
-    #filtro para agrupar por fecha
-    todo_array.each do |event| 
+    # filtro para agrupar por fecha
+    todo_array.each do |event|
       d1 = DateTime.iso8601(event["start_date"])
       if d1.mday == date_base.mday && d1.mon == date_base.mon && d1.year == date_base.year
         a_event.push(event)
         count += 1
-        has_event_all_day += 1 if event["end_date"] == "" 
+        has_event_all_day += 1 if event["end_date"] == ""
       end
     end
 
-    #if para llenar dia vacio
+    # if para llenar dia vacio
     if count.zero?
-      event_nil['start_date'] = Date.new(date_base.year,date_base.mon,date_base.mday).to_s
+      event_nil["start_date"] = Date.new(date_base.year, date_base.mon, date_base.mday).to_s
       a_event.push(event_nil)
-    #else para poner primero eventos de todo el dia
+    # else para poner primero eventos de todo el dia
     else
       unless has_event_all_day.zero?
-        p_event = a_event.select {|event| event["end_date"] == ""}
-        s_event = a_event.reject {|event| event["end_date"] == ""}
+        p_event = a_event.select { |event| event["end_date"] == "" }
+        s_event = a_event.reject { |event| event["end_date"] == "" }
         a_event = p_event + s_event
       end
     end
 
-    #impresion de menu principal
+    # impresion de menu principal
     i = 0
     a_event.each do |event|
-      d1 = DateTime.iso8601(event['start_date'])
+      d1 = DateTime.iso8601(event["start_date"])
       if i.zero?
         if event["end_date"] != ""
           d2 = DateTime.iso8601(event["end_date"])
@@ -170,7 +170,7 @@ def todoList(todo_array, date_base)
         else
           print "#{d1.strftime('%a %b %d               ')} "
           if event["id"] == ""
-            puts {event['title']}
+            puts { event["title"] }
           else
             puts "#{event['title']} (#{event['id']})"
           end
@@ -198,7 +198,7 @@ end
 
 def initial_program
   menu($events)
-  nameAction
+  name_action
 end
 
 $date_base = Date.new(2021, 11, 15)
