@@ -210,7 +210,7 @@ while action != "exit"
   action = gets.chomp
   case action
   when "list"
-    puts "listar"
+    initial_program
   when "create"
     puts "Crear"
   when "show"
