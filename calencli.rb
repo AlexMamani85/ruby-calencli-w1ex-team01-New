@@ -1,6 +1,6 @@
 # Data
 id = 0
-events = [
+$events = [
   { "id" => (id = id.next),
     "start_date" => "2021-11-15T00:00:00-05:00",
     "title" => "Ruby Basics 1",
@@ -104,3 +104,26 @@ events = [
 # Methods
 
 # Main Program
+
+
+def menu(arrTodo)
+  puts "-----------------------------Welcome to CalenCLI------------------------------"
+  todoList(arrTodo)
+  puts "------------------------------------------------------------------------------"
+  puts "list | create | show | update | delete | next | prev | exit"
+end 
+
+
+def todoList(todo_array)
+  todo_array.each do |event|
+    puts "#{event["id"]}\t #{event["title"]} \n" 
+  end
+end
+
+
+def initialProgram
+  menu($events)
+end
+
+
+initialProgram()
