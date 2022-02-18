@@ -106,7 +106,10 @@ $events = [
 # Main Program
 require "date"
 
+$id_global = $events.last["id"]
+
 def menu(arr_todo)
+  puts $id_global
   puts "-----------------------------Welcome to CalenCLI------------------------------"
   puts ""
   todo_list(arr_todo, $date_base)
@@ -196,6 +199,92 @@ def todo_list(todo_array, date_base)
   end
 end
 
+
+def valid_hours(start_end)
+  hour = start_end.split(" ")
+  start_hour =hour[0]
+  end_hour = hour[1]
+
+  if hour.length == 2 
+    minutes_one = start_hour.split(":") # [11, 0]
+    minutes_two = end_hour.split(":")
+    minutes_t1 = (minutes_one[0].to_i * 60) + minutes_one[1].to_i
+    minutes_t2 = (minutes_two[0].to_i * 60) + minutes_two[1].to_i
+    
+    if minutes_t1 < minutes_t2
+      return [true, minutes_one, minutes_two]
+    else
+      puts "cannot end before start"
+      return [false]
+    end
+  else
+    puts "should have a space between start and end hour"
+    return [false]
+  end
+end
+
+
+def create
+   event_nil = {
+    "id" => "",
+    "start_date" => "",
+    "title" => "",
+    "end_date" => "",
+    "notes" => "",
+    "guests" => [],
+    "calendar" => ""
+  }
+
+  print "date: "
+  date = gets.chomp
+  date = Date.iso8601(date)
+  year = date.year
+  month = date.mon
+  day = date.mday
+  event_nil["id"] =  $id_global.next
+  # puts Date.valid_date?(year, month, day)
+  print "title: "
+  title = gets.chomp
+  while title == ""
+    puts "Cannot be blank"
+    print "title: "
+    title = gets.chomp
+  end
+  event_nil["title"] = title
+
+  print "calendar: "
+  calendar = gets.chomp
+  event_nil["calendar"] = calendar 
+
+  print "start_end: "
+  start_end = gets.chomp
+
+  if start_end == ""
+    event_nil["start_end"] = DateTime.new(year, month,day,0, 0,0).to_s
+  else
+    hours = valid_hours(start_end)
+    until hours[0] #[boolean, [11, 0]]
+      print "start_end: "
+      start_end = gets.chomp
+      hours = valid_hours(start_end)
+    end
+    event_nil["start_date"] = DateTime.new(year, month,day,hours[1][0].to_i, hours[1][1].to_i,0).to_s 
+    event_nil["end_date"] = DateTime.new(year, month,day,hours[2][0].to_i, hours[2][1].to_i,0).to_s
+  end
+
+   
+  print "notes: "
+  notes = gets.chomp
+  event_nil["notes"] = notes
+  print "guests: "
+  guests = gets.chomp
+  event_nil["guests"] = guests.split(", ")
+  $events.push(event_nil) 
+  name_action
+end
+
+
+
 def initial_program
   menu($events)
   name_action
@@ -212,7 +301,7 @@ while action != "exit"
   when "list"
     initial_program
   when "create"
-    puts "Crear"
+    create
   when "show"
     puts "Mostrar"
   when "update"
