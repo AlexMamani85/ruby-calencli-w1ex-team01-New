@@ -146,8 +146,8 @@ end
 
 def todo_list(todo_array, date_base, event_nil)
   # for para iterar solo 7 dias
-  for i in 1..7
-    # filtro para agrupar por fecha
+  j = 1
+  loop do
     a_aux = group_events(todo_array, date_base)
     a_event = a_aux[0]
     count = a_aux[1]
@@ -224,7 +224,89 @@ def todo_list(todo_array, date_base, event_nil)
     end
     puts ""
     date_base += 1
+    break if j == 7
+
+    j += 1
   end
+  # for i in 1..7
+  #   # filtro para agrupar por fecha
+  #   a_aux = group_events(todo_array, date_base)
+  #   a_event = a_aux[0]
+  #   count = a_aux[1]
+  #   has_event_all_day = a_aux[2]
+
+  #   # if para llenar dia vacio
+  #   array_minutes = []
+  #   array_aux = []
+  #   if count.zero?
+  #     event_nil["start_date"] = Date.new(date_base.year, date_base.mon, date_base.mday).to_s
+  #     a_event.push(event_nil)
+  #   # else para poner primero eventos de todo el dia
+  #   elsif has_event_all_day.zero?
+  #     a_event.each do |event|
+  #       d = DateTime.iso8601(event["start_date"])
+  #       mins = (d.hour * 60) + d.min
+  #       array_minutes.push(mins)
+  #     end
+  #     array_minutes = array_minutes.sort
+  #     array_minutes.each do |min|
+  #       a_event.each do |event|
+  #         d1 = DateTime.iso8601(event["start_date"])
+  #         min1 = (d1.hour * 60) + d1.min
+  #         array_aux.push(event) if min == min1
+  #       end
+  #     end
+  #     a_event = array_aux
+  #   else
+  #     p_event = a_event.select { |event| event["end_date"] == "" }
+  #     s_event = a_event.reject { |event| event["end_date"] == "" }
+  #     s_event.each do |event|
+  #       d = DateTime.iso8601(event["start_date"])
+  #       mins = (d.hour * 60) + d.min
+  #       array_minutes.push(mins)
+  #     end
+  #     array_minutes = array_minutes.sort
+  #     array_minutes.each do |min|
+  #       s_event.each do |event|
+  #         d1 = DateTime.iso8601(event["start_date"])
+  #         min1 = (d1.hour * 60) + d1.min
+  #         array_aux.push(event) if min == min1
+  #       end
+  #     end
+  #     s_event = array_aux
+  #     a_event = p_event + s_event
+  #   end
+
+  #   # impresion de menu principal
+  #   i = 0
+  #   a_event.each do |event|
+  #     d1 = DateTime.iso8601(event["start_date"])
+  #     if i.zero?
+  #       if event["end_date"] == ""
+  #         print "#{d1.strftime('%a %b %d               ')} "
+  #         if event["id"] == ""
+  #           puts event["title"]
+  #         else
+  #           puts "#{event['title']} (#{event['id']})"
+  #         end
+  #       else
+  #         d2 = DateTime.iso8601(event["end_date"])
+  #         print "#{d1.strftime('%a %b %d  %H:%M')} - #{d2.strftime('%H:%M')} "
+  #         puts "#{event['title']} (#{event['id']})"
+  #       end
+  #       i += 1
+  #     elsif event["end_date"] != ""
+  #       d2 = DateTime.iso8601(event["end_date"])
+  #       puts "            #{d1.strftime('%H:%M')} - #{d2.strftime('%H:%M')} #{event['title']} (#{event['id']})"
+  #     elsif event["id"] == ""
+  #       puts "                          #{event['title']}"
+  #     else
+  #       puts "                          #{event['title']} (#{event['id']})"
+  #     end
+  #   end
+  #   puts ""
+  #   date_base += 1
+  # end
 end
 
 def valid_hours(start_end)
@@ -417,19 +499,20 @@ def metodo_update
   metodo_show(event_id)
 end
 
-def next_week
+def next_week(event_nil)
   $date_base = $date_base + 7
-  initial_program
+  initial_program(event_nil)
 end
 
-def previous_week
+def previous_week(event_nil)
   $date_base = $date_base - 7
-  initial_program
+  initial_program(event_nil)
 end
 
 def delete(id)
-  event_id = $events.select { |item| item["id"] != id.to_i }
+  event_id = $events.reject { |item| item["id"] == id.to_i }
   $events = event_id
+  name_action
 end
 
 def initial_program(event_nil)
@@ -465,9 +548,9 @@ while action != "exit"
     id = gets.chomp
     delete(id)
   when "next"
-    next_week
+    next_week(event_nil)
   when "prev"
-    previous_week
+    previous_week(event_nil)
   when "exit"
     puts "Exit"
   else
