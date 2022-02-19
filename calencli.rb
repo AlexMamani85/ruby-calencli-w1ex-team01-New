@@ -109,7 +109,6 @@ require "date"
 $id_global = $events.last["id"]
 
 def menu(arr_todo)
-  puts $id_global
   puts "-----------------------------Welcome to CalenCLI------------------------------"
   puts ""
   todo_list(arr_todo, $date_base)
@@ -154,9 +153,36 @@ def todo_list(todo_array, date_base)
       a_event.push(event_nil)
     # else para poner primero eventos de todo el dia
     else
-      unless has_event_all_day.zero?
+      if has_event_all_day.zero?
+        for n in 0..a_event.length - 1
+          for m in n + 1..a_event.length - 1
+            d1 = DateTime.iso8601(a_event[n]["start_date"])
+            d2 = DateTime.iso8601(a_event[m]["start_date"])
+            min1 = d1.hour*60 + d1.min
+            min2 = d2.hour*60 + d2.min
+            next if min1 < min2
+
+            aux = a_event[n]
+            a_event[n] = a_event[m]
+            a_event[m] = aux
+          end
+        end
+      else
         p_event = a_event.select { |event| event["end_date"] == "" }
         s_event = a_event.reject { |event| event["end_date"] == "" }
+        for n in 0..s_event.length - 1
+          for m in n + 1..s_event.length - 1
+            d1 = DateTime.iso8601(s_event[n]["start_date"])
+            d2 = DateTime.iso8601(s_event[m]["start_date"])
+            min1 = d1.hour*60 + d1.min
+            min2 = d2.hour*60 + d2.min
+            next if min1 < min2
+
+            aux = s_event[n]
+            s_event[n] = s_event[m]
+            s_event[m] = aux
+          end
+        end
         a_event = p_event + s_event
       end
     end
@@ -173,7 +199,7 @@ def todo_list(todo_array, date_base)
         else
           print "#{d1.strftime('%a %b %d               ')} "
           if event["id"] == ""
-            puts { event["title"] }
+            puts event["title"]
           else
             puts "#{event['title']} (#{event['id']})"
           end
@@ -198,7 +224,6 @@ def todo_list(todo_array, date_base)
     date_base += 1
   end
 end
-
 
 def valid_hours(start_end)
   hour = start_end.split(" ")
@@ -260,7 +285,7 @@ def create
   start_end = gets.chomp
 
   if start_end == ""
-    event_nil["start_end"] = DateTime.new(year, month,day,0, 0,0).to_s
+    event_nil["start_date"] = DateTime.new(year, month, day, 0, 0, 0).to_s 
   else
     hours = valid_hours(start_end)
     until hours[0] #[boolean, [11, 0]]
@@ -268,21 +293,20 @@ def create
       start_end = gets.chomp
       hours = valid_hours(start_end)
     end
-    event_nil["start_date"] = DateTime.new(year, month,day,hours[1][0].to_i, hours[1][1].to_i,0).to_s 
-    event_nil["end_date"] = DateTime.new(year, month,day,hours[2][0].to_i, hours[2][1].to_i,0).to_s
+    event_nil["start_date"] = DateTime.new(year, month, day, hours[1][0].to_i, hours[1][1].to_i, 0).to_s 
+    event_nil["end_date"] = DateTime.new(year, month, day, hours[2][0].to_i, hours[2][1].to_i, 0).to_s
   end
 
-   
   print "notes: "
   notes = gets.chomp
   event_nil["notes"] = notes
   print "guests: "
   guests = gets.chomp
   event_nil["guests"] = guests.split(", ")
-  $events.push(event_nil) 
+  $events.push(event_nil)
+  $id_global +=1
   name_action
 end
-
 
 
 def initial_program
@@ -295,6 +319,7 @@ initial_program
 action = nil
 
 while action != "exit"
+  puts ""
   print "action: "
   action = gets.chomp
   case action
