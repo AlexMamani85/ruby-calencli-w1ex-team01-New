@@ -427,6 +427,11 @@ def previous_week
   initial_program
 end
 
+def delete(id)
+  event_id = $events.select { |item| item["id"] != id.to_i }
+  $events = event_id
+end
+
 def initial_program(event_nil)
   menu($events, event_nil)
   name_action
@@ -456,7 +461,9 @@ while action != "exit"
   when "update"
     metodo_update
   when "delete"
-    puts "Eliminar"
+    print "Event ID: "
+    id = gets.chomp
+    delete(id)
   when "next"
     next_week
   when "prev"
