@@ -103,7 +103,34 @@ $events = [
 
 require "date"
 
-# Methods
+$id_global = $events.last["id"]
+
+def metodo_show(id)
+
+$events.each do |event|
+  if event["id"].to_i == id.to_i 
+    print "Event ID:"
+    puts event["id"]
+    print "date:"
+    d1 = DateTime.iso8601(event["start_date"])
+    puts "#{d1.strftime('%a %b %d ')}"
+    print "title:"
+    puts event["title"]
+    print "calendar: "
+    puts event["calendar"]
+    print "start_end: "
+    puts event["start_end"]
+    print "notes: "
+    puts event["notes"]
+    print "guests: "
+    puts event["guests"]
+  end
+end
+name_action
+end
+
+
+
 def menu(arr_todo)
   puts "-----------------------------Welcome to CalenCLI------------------------------"
   puts ""
@@ -313,6 +340,79 @@ def create
   name_action
 end
 
+
+
+def metodo_update
+
+  event_nil = {
+    "id" => "",
+    "start_date" => "",
+    "title" => "",
+    "end_date" => "",
+    "notes" => "",
+    "guests" => [],
+    "calendar" => ""
+  }
+
+  print "Event ID: "
+  event_id = gets.chomp.to_i
+  print "date: "
+  date = Date.iso8601(gets.chomp)
+  year = date.year
+  month = date.mon
+  day = date.mday
+
+  print "title: "
+  title = gets.chomp
+  while title == ""
+    puts "Cannot be blank"
+    print "title: "
+    title = gets.chomp
+  end
+  event_nil["title"] = title
+
+  print "calendar: "
+  calendar = gets.chomp
+  event_nil["calendar"] = calendar
+
+  print "start_end: "
+  start_end = gets.chomp
+
+  if start_end == ""
+    event_nil["start_end"] = DateTime.new(year, month,day, 0, 0, 0).to_s
+  else
+    hours = valid_hours(start_end)
+    until hours[0] # [boolean, [11, 0]]
+      print "start_end: "
+      start_end = gets.chomp
+      hours = valid_hours(start_end)
+    end
+    event_nil["start_date"] = DateTime.new(year, month,day,hours[1][0].to_i, hours[1][1].to_i,0).to_s 
+    event_nil["end_date"] = DateTime.new(year, month, day, hours[2][0].to_i, hours[2][1].to_i, 0).to_s
+  end
+  print "notes: "
+  notes = gets.chomp
+  event_nil["notes"] = notes
+  print "guests: "
+  guests = gets.chomp
+  event_nil["guests"] = guests.split(", ")
+  name_action
+  $events.each do |event|
+  evento_array = event["id"].to_i
+    if evento_array == event_id
+      event["start_date"] = event_nil["start_date"]
+      event["title"] = event_nil["title"]
+      event["end_date"] = event_nil["end_date"]
+      event["notes"] = event_nil["notes"]
+      event["guests"] = event_nil["guests"]
+      event["calendar"] = event_nil["calendar"]
+    end
+  end
+  metodo_show(event_id)
+end
+
+
+
 def initial_program
   menu($events)
   name_action
@@ -336,9 +436,12 @@ while action != "exit"
   when "create"
     create
   when "show"
-    puts "Mostrar"
+    print "Event ID:"
+    id_show = gets.chomp.to_i
+    metodo_show(id_show)
   when "update"
-    puts "Actualizar"
+    metodo_update
+
   when "delete"
     puts "Eliminar"
   when "next"
@@ -351,3 +454,4 @@ while action != "exit"
     puts "action invalid"
   end
 end
+    
