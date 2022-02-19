@@ -352,7 +352,6 @@ end
 
 
 def metodo_update
-
   event_nil = {
     "id" => "",
     "start_date" => "",
@@ -388,7 +387,7 @@ def metodo_update
   start_end = gets.chomp
 
   if start_end == ""
-    event_nil["start_end"] = DateTime.new(year, month,day, 0, 0, 0).to_s
+    event_nil["start_end"] = DateTime.new(year, month, day, 0, 0, 0).to_s
   else
     hours = valid_hours(start_end)
     until hours[0] # [boolean, [11, 0]]
@@ -396,7 +395,7 @@ def metodo_update
       start_end = gets.chomp
       hours = valid_hours(start_end)
     end
-    event_nil["start_date"] = DateTime.new(year, month,day,hours[1][0].to_i, hours[1][1].to_i,0).to_s 
+    event_nil["start_date"] = DateTime.new(year, month,day,hours[1][0].to_i, hours[1][1].to_i,0).to_s
     event_nil["end_date"] = DateTime.new(year, month, day, hours[2][0].to_i, hours[2][1].to_i, 0).to_s
   end
   print "notes: "
@@ -407,20 +406,23 @@ def metodo_update
   event_nil["guests"] = guests.split(", ")
   name_action
   $events.each do |event|
-  evento_array = event["id"].to_i
-    if evento_array == event_id
-      event["start_date"] = event_nil["start_date"]
-      event["title"] = event_nil["title"]
-      event["end_date"] = event_nil["end_date"]
-      event["notes"] = event_nil["notes"]
-      event["guests"] = event_nil["guests"]
-      event["calendar"] = event_nil["calendar"]
+    evento_array = event["id"].to_i
+      if evento_array == event_id
+        event["start_date"] = event_nil["start_date"]
+        event["title"] = event_nil["title"]
+        event["end_date"] = event_nil["end_date"]
+        event["notes"] = event_nil["notes"]
+        event["guests"] = event_nil["guests"]
+        event["calendar"] = event_nil["calendar"]
     end
   end
   metodo_show(event_id)
 end
 
-
+def delete(id)
+  event_id = $events.select { |item| item["id"] != id.to_i }
+  $events = event_id
+end
 
 def initial_program
   menu($events)
@@ -452,7 +454,9 @@ while action != "exit"
     metodo_update
 
   when "delete"
-    puts "Eliminar"
+    print "Event ID: "
+    id = gets.chomp
+    delete(id)
   when "next"
     next_week
   when "prev"
@@ -463,4 +467,3 @@ while action != "exit"
     puts "action invalid"
   end
 end
-    
