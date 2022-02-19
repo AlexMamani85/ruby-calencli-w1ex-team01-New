@@ -313,6 +313,16 @@ def create
   name_action
 end
 
+def next_week
+  $date_base = $date_base + 7
+  initial_program
+end
+
+def previous_week
+  $date_base = $date_base - 7
+  initial_program
+end
+
 def initial_program
   menu($events)
   name_action
@@ -342,9 +352,9 @@ while action != "exit"
   when "delete"
     puts "Eliminar"
   when "next"
-    puts "Next"
+    next_week
   when "prev"
-    puts "Prev"
+    previous_week
   when "exit"
     puts "Exit"
   else
