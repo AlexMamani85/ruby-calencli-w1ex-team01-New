@@ -92,7 +92,7 @@ $events = [
     "notes" => "",
     "guests" => [],
     "calendar" => "web-dev" },
-  { "id" => (id = id.next),
+  { "id" => id.next,
     "start_date" => "2021-11-26T09:00:00-05:00",
     "title" => "Extended Project",
     "end_date" => "",
@@ -101,9 +101,6 @@ $events = [
     "calendar" => "web-dev" }
 ]
 
-# Methods
-
-# Main Program
 require "date"
 
 $id_global = $events.last["id"]
@@ -135,7 +132,6 @@ end
 
 
 def menu(arr_todo)
-  puts $id_global
   puts "-----------------------------Welcome to CalenCLI------------------------------"
   puts ""
   todo_list(arr_todo, $date_base)
@@ -157,7 +153,6 @@ def todo_list(todo_array, date_base)
     "guests" => [],
     "calendar" => ""
   }
-  
   # for para iterar solo 7 dias
   for i in 1..7
     a_event = []
@@ -167,24 +162,53 @@ def todo_list(todo_array, date_base)
     # filtro para agrupar por fecha
     todo_array.each do |event|
       d1 = DateTime.iso8601(event["start_date"])
-      if d1.mday == date_base.mday && d1.mon == date_base.mon && d1.year == date_base.year
-        a_event.push(event)
-        count += 1
-        has_event_all_day += 1 if event["end_date"] == ""
-      end
+      next unless d1.mday == date_base.mday && d1.mon == date_base.mon && d1.year == date_base.year
+
+      a_event.push(event)
+      count += 1
+      has_event_all_day += 1 if event["end_date"] == ""
     end
 
     # if para llenar dia vacio
+    array_minutes = []
+    array_aux = []
     if count.zero?
       event_nil["start_date"] = Date.new(date_base.year, date_base.mon, date_base.mday).to_s
       a_event.push(event_nil)
     # else para poner primero eventos de todo el dia
-    else
-      unless has_event_all_day.zero?
-        p_event = a_event.select { |event| event["end_date"] == "" }
-        s_event = a_event.reject { |event| event["end_date"] == "" }
-        a_event = p_event + s_event
+    elsif has_event_all_day.zero?
+      a_event.each do |event|
+        d = DateTime.iso8601(event["start_date"])
+        mins = (d.hour * 60) + d.min
+        array_minutes.push(mins)
       end
+      array_minutes = array_minutes.sort
+      array_minutes.each do |min|
+        a_event.each do |event|
+          d1 = DateTime.iso8601(event["start_date"])
+          min1 = (d1.hour * 60) + d1.min
+          array_aux.push(event) if min == min1
+        end
+      end
+      a_event = array_aux
+    else
+      p_event = a_event.select { |event| event["end_date"] == "" }
+      s_event = a_event.reject { |event| event["end_date"] == "" }
+      s_event.each do |event|
+        d = DateTime.iso8601(event["start_date"])
+        mins = (d.hour * 60) + d.min
+        array_minutes.push(mins)
+      end
+      array_minutes = array_minutes.sort
+      array_minutes.each do |min|
+        s_event.each do |event|
+          d1 = DateTime.iso8601(event["start_date"])
+          min1 = (d1.hour * 60) + d1.min
+          array_aux.push(event) if min == min1
+        end
+      end
+      s_event = array_aux
+      a_event = p_event + s_event
     end
 
     # impresion de menu principal
@@ -192,31 +216,27 @@ def todo_list(todo_array, date_base)
     a_event.each do |event|
       d1 = DateTime.iso8601(event["start_date"])
       if i.zero?
-        if event["end_date"] != ""
-          d2 = DateTime.iso8601(event["end_date"])
-          print "#{d1.strftime('%a %b %d  %H:%M')} - #{d2.strftime('%H:%M')} "
-          puts "#{event['title']} (#{event['id']})"
-        else
+        if event["end_date"] == ""
           print "#{d1.strftime('%a %b %d               ')} "
-          if event["id"] == ""
-            puts { event["title"] }
-          else
-            puts "#{event['title']} (#{event['id']})"
-          end
-        end
-        i += 1
-      else
-        if event["end_date"] != ""
-          d2 = DateTime.iso8601(event["end_date"])
-          print "            #{d1.strftime('%H:%M')} - #{d2.strftime('%H:%M')} "
-          puts "#{event['title']} (#{event['id']})"
-        else
-          print "                          "
           if event["id"] == ""
             puts event["title"]
           else
             puts "#{event['title']} (#{event['id']})"
           end
+        else
+          d2 = DateTime.iso8601(event["end_date"])
+          print "#{d1.strftime('%a %b %d  %H:%M')} - #{d2.strftime('%H:%M')} "
+          puts "#{event['title']} (#{event['id']})"
+        end
+        i += 1
+      elsif event["end_date"] != ""
+        d2 = DateTime.iso8601(event["end_date"])
+        puts "            #{d1.strftime('%H:%M')} - #{d2.strftime('%H:%M')} #{event['title']} (#{event['id']})"
+      else
+        if event["id"] == ""
+          puts "                          #{event['title']}"
+        else
+          puts "                          #{event['title']} (#{event['id']})"
         end
       end
     end
@@ -225,33 +245,31 @@ def todo_list(todo_array, date_base)
   end
 end
 
-
 def valid_hours(start_end)
-  hour = start_end.split(" ")
-  start_hour =hour[0]
+  hour = start_end.split
+  start_hour = hour[0]
   end_hour = hour[1]
 
-  if hour.length == 2 
+  if hour.length == 2
     minutes_one = start_hour.split(":") # [11, 0]
     minutes_two = end_hour.split(":")
     minutes_t1 = (minutes_one[0].to_i * 60) + minutes_one[1].to_i
     minutes_t2 = (minutes_two[0].to_i * 60) + minutes_two[1].to_i
-    
     if minutes_t1 < minutes_t2
-      return [true, minutes_one, minutes_two]
+      a = [true, minutes_one, minutes_two]
     else
-      puts "cannot end before start"
-      return [false]
+      puts "Cannot end before start"
+      a = [false]
     end
   else
-    puts "should have a space between start and end hour"
-    return [false]
+    puts "Format: 'HH:MM HH:MM' or leave it empty"
+    a = [false]
   end
+  a
 end
 
-
 def create
-   event_nil = {
+  event_nil = {
     "id" => "",
     "start_date" => "",
     "title" => "",
@@ -263,11 +281,16 @@ def create
 
   print "date: "
   date = gets.chomp
+  while date == ""
+    puts "Type a valid date: YYYY-MM-DD"
+    print "date: "
+    date = gets.chomp
+  end
   date = Date.iso8601(date)
   year = date.year
   month = date.mon
   day = date.mday
-  event_nil["id"] =  $id_global.next
+  event_nil["id"] = $id_global.next
   # puts Date.valid_date?(year, month, day)
   print "title: "
   title = gets.chomp
@@ -280,32 +303,40 @@ def create
 
   print "calendar: "
   calendar = gets.chomp
-  event_nil["calendar"] = calendar 
+  event_nil["calendar"] = calendar
 
   print "start_end: "
   start_end = gets.chomp
 
   if start_end == ""
-    event_nil["start_end"] = DateTime.new(year, month,day,0, 0,0).to_s
+    event_nil["start_date"] = DateTime.new(year, month, day, 0, 0, 0).to_s
   else
     hours = valid_hours(start_end)
-    until hours[0] #[boolean, [11, 0]]
+    until hours[0] # [boolean, [11, 0]]
       print "start_end: "
       start_end = gets.chomp
-      hours = valid_hours(start_end)
+      if start_end == ""
+        hours[0] = true
+      else
+        hours = valid_hours(start_end)
+      end
     end
-    event_nil["start_date"] = DateTime.new(year, month,day,hours[1][0].to_i, hours[1][1].to_i,0).to_s 
-    event_nil["end_date"] = DateTime.new(year, month,day,hours[2][0].to_i, hours[2][1].to_i,0).to_s
+    if start_end == ""
+      event_nil["start_date"] = DateTime.new(year, month, day, 0, 0, 0).to_s
+    else
+      event_nil["start_date"] = DateTime.new(year, month, day, hours[1][0].to_i, hours[1][1].to_i, 0).to_s
+      event_nil["end_date"] = DateTime.new(year, month, day, hours[2][0].to_i, hours[2][1].to_i, 0).to_s
+    end
   end
 
-   
   print "notes: "
   notes = gets.chomp
   event_nil["notes"] = notes
   print "guests: "
   guests = gets.chomp
   event_nil["guests"] = guests.split(", ")
-  $events.push(event_nil) 
+  $events.push(event_nil)
+  $id_global += 1
   name_action
 end
 
@@ -386,12 +417,17 @@ def initial_program
   menu($events)
   name_action
 end
+# Finish Methods
 
+# Main Program
+
+$id_global = $events.last["id"]
 $date_base = Date.new(2021, 11, 15)
 initial_program
 action = nil
 
 while action != "exit"
+  puts ""
   print "action: "
   action = gets.chomp
   case action
