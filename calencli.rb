@@ -105,36 +105,10 @@ require "date"
 
 $id_global = $events.last["id"]
 
-def metodo_show(id)
-
-$events.each do |event|
-  if event["id"].to_i == id.to_i 
-    print "Event ID:"
-    puts event["id"]
-    print "date:"
-    d1 = DateTime.iso8601(event["start_date"])
-    puts "#{d1.strftime('%a %b %d ')}"
-    print "title:"
-    puts event["title"]
-    print "calendar: "
-    puts event["calendar"]
-    print "start_end: "
-    puts event["start_end"]
-    print "notes: "
-    puts event["notes"]
-    print "guests: "
-    puts event["guests"]
-  end
-end
-name_action
-end
-
-
-
-def menu(arr_todo)
+def menu(arr_todo, event_nil)
   puts "-----------------------------Welcome to CalenCLI------------------------------"
   puts ""
-  todo_list(arr_todo, $date_base)
+  todo_list(arr_todo, $date_base, event_nil)
 end
 
 def name_action
@@ -142,32 +116,42 @@ def name_action
   puts "list | create | show | update | delete | next | prev | exit"
 end
 
-def todo_list(todo_array, date_base)
-  # hash para llenar eventos vacios
-  event_nil = {
-    "id" => "",
-    "start_date" => "",
-    "title" => "No events",
-    "end_date" => "",
-    "notes" => "",
-    "guests" => [],
-    "calendar" => ""
-  }
+event_nil = {
+  "id" => "",
+  "start_date" => "",
+  "title" => "No events",
+  "end_date" => "",
+  "notes" => "",
+  "guests" => [],
+  "calendar" => ""
+}
+
+def group_events(todo_array, date_base)
+  a_event = []
+  count = 0
+  has_event_all_day = 0
+
+  # filtro para agrupar por fecha
+  todo_array.each do |event|
+    d1 = DateTime.iso8601(event["start_date"])
+    next unless d1.mday == date_base.mday && d1.mon == date_base.mon && d1.year == date_base.year
+
+    a_event.push(event)
+    count += 1
+    has_event_all_day += 1 if event["end_date"] == ""
+  end
+
+  [a_event, count, has_event_all_day]
+end
+
+def todo_list(todo_array, date_base, event_nil)
   # for para iterar solo 7 dias
   for i in 1..7
-    a_event = []
-    count = 0
-    has_event_all_day = 0
-
     # filtro para agrupar por fecha
-    todo_array.each do |event|
-      d1 = DateTime.iso8601(event["start_date"])
-      next unless d1.mday == date_base.mday && d1.mon == date_base.mon && d1.year == date_base.year
-
-      a_event.push(event)
-      count += 1
-      has_event_all_day += 1 if event["end_date"] == ""
-    end
+    a_aux = group_events(todo_array, date_base)
+    a_event = a_aux[0]
+    count = a_aux[1]
+    has_event_all_day = a_aux[2]
 
     # if para llenar dia vacio
     array_minutes = []
@@ -232,12 +216,10 @@ def todo_list(todo_array, date_base)
       elsif event["end_date"] != ""
         d2 = DateTime.iso8601(event["end_date"])
         puts "            #{d1.strftime('%H:%M')} - #{d2.strftime('%H:%M')} #{event['title']} (#{event['id']})"
+      elsif event["id"] == ""
+        puts "                          #{event['title']}"
       else
-        if event["id"] == ""
-          puts "                          #{event['title']}"
-        else
-          puts "                          #{event['title']} (#{event['id']})"
-        end
+        puts "                          #{event['title']} (#{event['id']})"
       end
     end
     puts ""
@@ -340,16 +322,26 @@ def create
   name_action
 end
 
-def next_week
-  $date_base = $date_base + 7
-  initial_program
-end
+def metodo_show(id)
+  $events.each do |event|
+    next unless event["id"].to_i == id.to_i
 
-def previous_week
-  $date_base = $date_base - 7
-  initial_program
+    print "date: "
+    d1 = DateTime.iso8601(event["start_date"])
+    puts d1.strftime("%F")
+    print "title: "
+    puts event["title"]
+    print "calendar: "
+    puts event["calendar"]
+    print "start_end: "
+    puts event["start_end"]
+    print "notes: "
+    puts event["notes"]
+    print "guests: "
+    puts event["guests"]
+  end
+  name_action
 end
-
 
 def metodo_update
   event_nil = {
@@ -365,7 +357,13 @@ def metodo_update
   print "Event ID: "
   event_id = gets.chomp.to_i
   print "date: "
-  date = Date.iso8601(gets.chomp)
+  date = gets.chomp
+  while date == ""
+    puts "Type a valid date: YYYY-MM-DD"
+    print "date: "
+    date = gets.chomp
+  end
+  date = Date.iso8601(date)
   year = date.year
   month = date.mon
   day = date.mday
@@ -387,7 +385,7 @@ def metodo_update
   start_end = gets.chomp
 
   if start_end == ""
-    event_nil["start_end"] = DateTime.new(year, month, day, 0, 0, 0).to_s
+    event_nil["start_date"] = DateTime.new(year, month, day, 0, 0, 0).to_s
   else
     hours = valid_hours(start_end)
     until hours[0] # [boolean, [11, 0]]
@@ -395,7 +393,7 @@ def metodo_update
       start_end = gets.chomp
       hours = valid_hours(start_end)
     end
-    event_nil["start_date"] = DateTime.new(year, month,day,hours[1][0].to_i, hours[1][1].to_i,0).to_s
+    event_nil["start_date"] = DateTime.new(year, month, day, hours[1][0].to_i, hours[1][1].to_i, 0).to_s
     event_nil["end_date"] = DateTime.new(year, month, day, hours[2][0].to_i, hours[2][1].to_i, 0).to_s
   end
   print "notes: "
@@ -407,16 +405,26 @@ def metodo_update
   name_action
   $events.each do |event|
     evento_array = event["id"].to_i
-      if evento_array == event_id
-        event["start_date"] = event_nil["start_date"]
-        event["title"] = event_nil["title"]
-        event["end_date"] = event_nil["end_date"]
-        event["notes"] = event_nil["notes"]
-        event["guests"] = event_nil["guests"]
-        event["calendar"] = event_nil["calendar"]
-    end
+    next unless evento_array == event_id
+
+    event["start_date"] = event_nil["start_date"]
+    event["title"] = event_nil["title"]
+    event["end_date"] = event_nil["end_date"]
+    event["notes"] = event_nil["notes"]
+    event["guests"] = event_nil["guests"]
+    event["calendar"] = event_nil["calendar"]
   end
   metodo_show(event_id)
+end
+
+def next_week
+  $date_base = $date_base + 7
+  initial_program
+end
+
+def previous_week
+  $date_base = $date_base - 7
+  initial_program
 end
 
 def delete(id)
@@ -424,8 +432,8 @@ def delete(id)
   $events = event_id
 end
 
-def initial_program
-  menu($events)
+def initial_program(event_nil)
+  menu($events, event_nil)
   name_action
 end
 # Finish Methods
@@ -434,7 +442,7 @@ end
 
 $id_global = $events.last["id"]
 $date_base = Date.new(2021, 11, 15)
-initial_program
+initial_program(event_nil)
 action = nil
 
 while action != "exit"
@@ -443,16 +451,15 @@ while action != "exit"
   action = gets.chomp
   case action
   when "list"
-    initial_program
+    initial_program(event_nil)
   when "create"
     create
   when "show"
-    print "Event ID:"
+    print "Event ID: "
     id_show = gets.chomp.to_i
     metodo_show(id_show)
   when "update"
     metodo_update
-
   when "delete"
     print "Event ID: "
     id = gets.chomp
